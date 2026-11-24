@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Windows.Forms;
 
 namespace AkademikTakipSistemi
@@ -100,18 +101,46 @@ namespace AkademikTakipSistemi
             cmbDers.ValueMember = "DersID";
             
         }
-        // Vize ve final notlarını hesaplar.
+        // Vize %40 + Final %60 ile ortalamayı hesaplar.
+        // Hem "Hesapla" hem "Kaydet" bu metodu kullanır, böylece iki yerde farklı sonuç çıkmaz.
+        double OrtalamaHesapla(double vize, double final)
+        {
+            return (vize * 0.4) + (final * 0.6);
+        }
+
+        // Bir not kutusunu okur: sayı mı ve 0-100 arasında mı kontrol eder.
+        // Hatalıysa kullanıcıya mesaj gösterir, kutuyu seçer ve false döner.
+        bool NotOku(TextBox kutu, string notAdi, out double deger)
+        {
+            string metin = kutu.Text.Trim().Replace(',', '.'); // 75,5 ve 75.5 ikisi de kabul edilir
+
+            if (!double.TryParse(metin, NumberStyles.Float, CultureInfo.InvariantCulture, out deger))
+            {
+                MessageBox.Show(notAdi + " notu sayı olmalıdır.", "Hatalı Giriş", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                kutu.Focus();
+                kutu.SelectAll();
+                return false;
+            }
+
+            if (deger < 0 || deger > 100)
+            {
+                MessageBox.Show(notAdi + " notu 0 ile 100 arasında olmalıdır.", "Hatalı Giriş", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                kutu.Focus();
+                kutu.SelectAll();
+                return false;
+            }
+
+            return true;
+        }
+
+        // Vize ve final notlarını kontrol edip ortalamayı ve geçme/kalma durumunu gösterir.
         private void btnHesapla_Click(object sender, EventArgs e)
         {
-            double vize, final, ortalama;
+            double vize, final;
+            if (!NotOku(txtVize, "Vize", out vize)) return;
+            if (!NotOku(txtFinal, "Final", out final)) return;
 
-            // TextBox'lardan değerleri alıp sayıya çeviriyoruz
-            // Hata almamak için try-catch bloğu veya double.TryParse kullanılabilir ama şimdilik temel mantığı yazıyorum.
-            vize = Convert.ToDouble(txtVize.Text);
-            final = Convert.ToDouble(txtFinal.Text);
-
-            // Üniversite geneli ortalama hesabı: Vize %40 + Final %60
-            ortalama = (vize * 0.4) + (final * 0.6);
+            double ortalama = OrtalamaHesapla(vize, final);
 
             // Ortalamayı yazdır
             txtOrtalama.Text = ortalama.ToString("0.00"); // Virgülden sonra 2 hane gösterir
@@ -130,31 +159,47 @@ namespace AkademikTakipSistemi
                 txtDurum.ForeColor = Color.White;
             }
         }
-        
 
-        //Not bilgilerini veritabanına kaydeder.
 
+        //Not bilgilerini kontrol edip veritabanına kaydeder.
         private void btnKaydet_Click(object sender, EventArgs e)
-
         {
-            baglanti.Open();
+            if (cmbOgrenci.SelectedValue == null || cmbDers.SelectedValue == null)
+            {
+                MessageBox.Show("Lütfen öğrenci ve ders seçiniz.", "Eksik Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            double vize, final;
+            if (!NotOku(txtVize, "Vize", out vize)) return;
+            if (!NotOku(txtFinal, "Final", out final)) return;
+
+            double ort = OrtalamaHesapla(vize, final);
+
             SqlCommand komut = new SqlCommand("INSERT INTO Tbl_Notlar (OgrenciID, DersID, Vize, Final, Ortalama, Durum) VALUES (@p1, @p2, @p3, @p4, @p5, @p6)", baglanti);
 
             // ComboBox'tan seçilen gizli ID'leri alıyoruz
             komut.Parameters.AddWithValue("@p1", cmbOgrenci.SelectedValue);
             komut.Parameters.AddWithValue("@p2", cmbDers.SelectedValue);
-
-            komut.Parameters.AddWithValue("@p3", txtVize.Text);
-            komut.Parameters.AddWithValue("@p4", txtFinal.Text);
-
-            // Hesaplama ve Durum (Önceki mesajlarımızdaki gibi)
-            double ort = (Convert.ToDouble(txtVize.Text) + Convert.ToDouble(txtFinal.Text)) / 2;
-            komut.Parameters.AddWithValue("@p5", ort);
+            komut.Parameters.AddWithValue("@p3", vize);
+            komut.Parameters.AddWithValue("@p4", final);
+            komut.Parameters.AddWithValue("@p5", Math.Round(ort, 2));
             komut.Parameters.AddWithValue("@p6", ort >= 50 ? "Geçti" : "Kaldı");
 
-            komut.ExecuteNonQuery();
-            baglanti.Close();
-            MessageBox.Show("Not başarıyla kaydedildi!");
+            try
+            {
+                baglanti.Open();
+                komut.ExecuteNonQuery();
+                MessageBox.Show("Not başarıyla kaydedildi!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Not kaydedilemedi: " + ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                baglanti.Close(); // Hata olsa bile bağlantı kapanır.
+            }
         }
     }
 }

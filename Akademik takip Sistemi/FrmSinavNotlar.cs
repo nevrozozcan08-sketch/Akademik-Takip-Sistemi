@@ -90,7 +90,8 @@ LEFT JOIN Tbl_Dersler ON Tbl_Notlar.DersID = Tbl_Dersler.DersID", baglanti);
         private void btnNotEkle_Click(object sender, EventArgs e) 
         {
             FrmNotEkle fr = new FrmNotEkle();
-            fr.Show();
+            fr.ShowDialog(); // Not ekleme penceresi kapanana kadar bekler.
+            Listele();       // Pencere kapanınca listeyi yeniler, yeni not hemen görünür.
         }
 
         private void dataGridView1_CellContentClick_1(object sender, DataGridViewCellEventArgs e)
