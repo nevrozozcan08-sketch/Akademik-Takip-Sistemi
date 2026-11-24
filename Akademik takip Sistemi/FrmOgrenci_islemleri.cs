@@ -40,7 +40,38 @@ namespace AkademikTakipSistemi
             }
 
             // Gelen verileri DataGridView üzerinde göster.
+            // Arama kutusu doluysa listeyi ada veya numaraya göre filtreler.
+            dt.DefaultView.RowFilter = AramaFiltresi(dt, txtAra.Text.Trim());
+
             dataGridView1.DataSource = dt;
+        }
+
+        // Arama metninden DataView filtresi oluşturur (ad soyad ve numara sütunlarında arar).
+        string AramaFiltresi(DataTable dt, string ara)
+        {
+            if (ara == "")
+                return ""; // Boşsa filtre yok, tüm öğrenciler listelenir.
+
+            // Filtre ifadesinde özel anlamı olan karakterleri güvenli hâle getirir.
+            StringBuilder sb = new StringBuilder();
+            foreach (char ch in ara)
+            {
+                if (ch == '[' || ch == ']' || ch == '*' || ch == '%')
+                    sb.Append("[").Append(ch).Append("]");
+                else if (ch == '\'')
+                    sb.Append("''");
+                else
+                    sb.Append(ch);
+            }
+            string deger = "'%" + sb.ToString() + "%'";
+
+            List<string> kosullar = new List<string>();
+            foreach (string sutun in new[] { "AdSoyad", "OgrenciNo", "Numara" })
+            {
+                if (dt.Columns.Contains(sutun))
+                    kosullar.Add("Convert([" + sutun + "], 'System.String') LIKE " + deger);
+            }
+            return string.Join(" OR ", kosullar);
         }
        
         
@@ -274,6 +305,12 @@ namespace AkademikTakipSistemi
         private void txtNumara_TextChanged(object sender, EventArgs e)
         {
 
+        }
+
+        // Arama kutusuna her harf yazıldığında listeyi anında filtreler.
+        private void txtAra_TextChanged(object sender, EventArgs e)
+        {
+            Listele();
         }
     }
 }

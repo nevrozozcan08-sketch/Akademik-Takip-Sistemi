@@ -41,6 +41,8 @@
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.btnSil = new System.Windows.Forms.Button();
             this.btnGuncelle = new System.Windows.Forms.Button();
+            this.lblAra = new System.Windows.Forms.Label();
+            this.txtAra = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -169,12 +171,33 @@
             this.btnGuncelle.UseVisualStyleBackColor = false;
             this.btnGuncelle.Click += new System.EventHandler(this.btnGuncelle_Click);
             // 
+            // lblAra
+            // 
+            this.lblAra.AutoSize = true;
+            this.lblAra.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(162)));
+            this.lblAra.Location = new System.Drawing.Point(620, 36);
+            this.lblAra.Name = "lblAra";
+            this.lblAra.Size = new System.Drawing.Size(150, 18);
+            this.lblAra.TabIndex = 15;
+            this.lblAra.Text = "Ara (Ad / Numara):";
+            // 
+            // txtAra
+            // 
+            this.txtAra.BackColor = System.Drawing.Color.White;
+            this.txtAra.Location = new System.Drawing.Point(620, 62);
+            this.txtAra.Name = "txtAra";
+            this.txtAra.Size = new System.Drawing.Size(160, 22);
+            this.txtAra.TabIndex = 16;
+            this.txtAra.TextChanged += new System.EventHandler(this.txtAra_TextChanged);
+            // 
             // FrmOgrenci_islemleri
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.txtAra);
+            this.Controls.Add(this.lblAra);
             this.Controls.Add(this.btnGuncelle);
             this.Controls.Add(this.btnSil);
             this.Controls.Add(this.dataGridView1);
@@ -211,6 +234,8 @@
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.Button btnSil;
         private System.Windows.Forms.Button btnGuncelle;
+        private System.Windows.Forms.Label lblAra;
+        private System.Windows.Forms.TextBox txtAra;
     }
 }
 
